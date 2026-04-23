@@ -1,21 +1,25 @@
+// app/dashboard/layout.jsx
 "use client";
 import { useState } from 'react';
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 
 export default function DashboardLayout({ children }) {
-  // State untuk menyimpan status menu di HP (terbuka/tertutup)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="shell">
-      {/* Layar gelap transparan saat menu HP terbuka */}
       <div 
         className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} 
         onClick={() => setIsSidebarOpen(false)}
       ></div>
 
-      <Sidebar isOpen={isSidebarOpen} closeSidebar={() => setIsSidebarOpen(false)} />
+      {/* TAMBAHKAN role="admin" DI SINI */}
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        closeSidebar={() => setIsSidebarOpen(false)} 
+        role="admin" 
+      />
       
       <div className="main">
         <Topbar title="Overview Dashboard" toggleSidebar={() => setIsSidebarOpen(true)} />
