@@ -3,6 +3,8 @@ import { useState } from 'react';
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 
+
+
 export default function UploadPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -27,31 +29,40 @@ export default function UploadPage() {
   };
 
   // LOGIKA VALIDASI SEBELUM LANJUT TAHAP
-  const lanjutLangkah = () => {
-    setErrorMsg(''); // Hapus pesan error sebelumnya
+const lanjutLangkah = () => {
+  setErrorMsg('');
 
-    if (step === 1) {
-      if (!nominal || !jumlah) {
-        setErrorMsg('⚠️ Mohon isi Nominal dan Jumlah lembar terlebih dahulu!');
-        return; // Berhenti, jangan ubah step
-      }
-    } 
-    else if (step === 2) {
-      if (!isFotoUploaded) {
-        setErrorMsg('⚠️ Mohon upload foto bukti uang (Klik kotak upload di atas)!');
-        return; // Berhenti, jangan ubah step
-      }
+  if (step === 1) {
+    if (!nominal || !jumlah) {
+      setErrorMsg('⚠️ Mohon isi Nominal dan Jumlah lembar terlebih dahulu!');
+      return;
     }
-    // Step 3 (Lokasi) otomatis lolos karena sudah ada default yang terpilih
+  } 
+  else if (step === 2) {
+    if (!isFotoUploaded) {
+      setErrorMsg('⚠️ Mohon upload foto bukti uang (Klik kotak upload di atas)!');
+      return;
+    }
+  }
+  // TAMBAHAN VALIDASI TANGGAL DI STEP 3
+  else if (step === 3) {
+    if (!tanggal) {
+      setErrorMsg('⚠️ Mohon pilih tanggal pertemuan terlebih dahulu!');
+      return;
+    }
+  }
 
-    if (step < 4) setStep(step + 1);
-  };
+  if (step < 4) setStep(step + 1);
+};
 
   // Fungsi simulasi saat kotak upload diklik
   const handleUploadClick = () => {
     setIsFotoUploaded(true);
     setErrorMsg(''); // Langsung hapus error jika user sudah upload
   };
+
+  const [tanggal, setTanggal] = useState('');
+  const [sesi, setSesi] = useState('Sesi 1 (09:00 - 11:00)');
 
   return (
     <div className="shell">
@@ -146,19 +157,54 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              <div className="card" style={{ padding: '24px' }}>
-                <div className="card-title" style={{ marginBottom: '16px' }}>Pilih Lokasi Penukaran</div>
-                <div className="map-box" style={{ marginBottom: '20px' }}>
-                  <div style={{ fontSize: '24px', color: 'var(--green)' }}>📍</div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text2)' }}>Deteksi lokasi otomatis</div>
-                </div>
-                <div className="loc-row selected">
-                  <div className="loc-dot" style={{ background: 'var(--green)' }}></div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--green)' }}>Kas Keliling BI — Alun-alun Bandung</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text2)' }}>0.8 km</div>
-                  </div>
-                </div>
+             {/* --- KARTU LOKASI & JADWAL (Step 3) --- */}
+                  <div className="card" style={{ padding: '24px' }}>
+                    <div className="card-title" style={{ marginBottom: '16px' }}>Pilih Lokasi Penukaran</div>
+                    <div className="map-box" style={{ marginBottom: '20px' }}>
+                      <div style={{ fontSize: '24px', color: 'var(--green)' }}>📍</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text2)' }}>Deteksi lokasi otomatis</div>
+                    </div>
+                    <div className="loc-row selected" style={{ marginBottom: '24px' }}>
+                      <div className="loc-dot" style={{ background: 'var(--green)' }}></div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--green)' }}>Kas Keliling BI — Alun-alun Bandung</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text2)' }}>0.8 km</div>
+                      </div>
+                    </div>
+
+                    {/* --- BAGIAN INPUT TANGGAL & SESI BARU --- */}
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                      <div className="card-title" style={{ marginBottom: '16px', fontSize: '13px' }}>Tentukan Jadwal Pertemuan</div>
+                      
+                      <div className="form-group" style={{ marginBottom: '16px' }}>
+                        <label className="form-label">Tanggal Kedatangan</label>
+                        <input 
+                          type="date" 
+                          className="form-input" 
+                          value={tanggal}
+                          onChange={(e) => setTanggal(e.target.value)}
+                          style={{ colorScheme: 'dark' }} 
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Pilih Sesi</label>
+                        <select 
+                          className="form-input" 
+                          value={sesi}
+                          onChange={(e) => setSesi(e.target.value)}
+                          style={{ background: 'var(--bg3)', cursor: 'pointer' }}
+                        >
+                          <option>Sesi 1 (09:00 - 11:00)</option>
+                          <option>Sesi 2 (11:00 - 13:00)</option>
+                          <option>Sesi 3 (13:00 - 15:00)</option>
+                        </select>
+                      </div>
+                      
+                      <p style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '12px', lineHeight: '1.4' }}>
+                        * Pastikan hadir tepat waktu sesuai sesi yang dipilih untuk menghindari antrean panjang.
+                      </p>
+                    </div>
               </div>
             </div>
 
@@ -204,7 +250,6 @@ export default function UploadPage() {
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>

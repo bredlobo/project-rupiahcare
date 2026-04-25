@@ -1,89 +1,116 @@
+"use client";
+import { useState } from 'react';
+
 export default function DashboardOverview() {
-  
-  // A. DATA DUMMY DITARUH DI SINI (Di dalam function, sebelum return)
-  const dummyLaporan = [
-    { id: 1, nama: "Siti Rahayu", nominal: "Rp 150.000", kota: "Bandung", status: "Menunggu" },
-    { id: 2, nama: "Ahmad Fauzi", nominal: "Koin x50", kota: "Surabaya", status: "Diproses" },
-    { id: 3, nama: "Dewi Lestari", nominal: "Rp 100.000 x2", kota: "Jakarta", status: "Selesai" },
-    { id: 4, nama: "Rudi Hermawan", nominal: "Rp 20.000 x10", kota: "Medan", status: "Menunggu" },
-    { id: 5, nama: "Budi Santoso", nominal: "Rp 50.000 x3", kota: "Semarang", status: "Diproses" },
-    { id: 6, nama: "Lina Marlina", nominal: "Rp 10.000 x5", kota: "Yogyakarta", status: "Menunggu" },
-    { id: 7, nama: "Andi Saputra", nominal: "Koin x100", kota: "Makassar", status: "Selesai" },
-  ];
+  // 1. DATA DENGAN TAMBAHAN TANGGAL & SESI
+  const [allLaporan, setAllLaporan] = useState([
+    { id: 1, nama: "Siti Rahayu", nominal: "Rp 150.000", kota: "Bandung", status: "Menunggu", tanggal: "2026-04-26", sesi: "Sesi 1" },
+    { id: 2, nama: "Ahmad Fauzi", nominal: "Koin x50", kota: "Surabaya", status: "Diproses", tanggal: "2026-04-26", sesi: "Sesi 2" },
+    { id: 3, nama: "Dewi Lestari", nominal: "Rp 100.000 x2", kota: "Jakarta", status: "Selesai", tanggal: "2026-04-25", sesi: "Sesi 1" },
+    { id: 4, nama: "Rudi Hermawan", nominal: "Rp 20.000 x10", kota: "Medan", status: "Menunggu", tanggal: "2026-04-27", sesi: "Sesi 3" },
+  ]);
+
+  const [filterStatus, setFilterStatus] = useState('Semua');
+
+  // Statistik Otomatis
+  const totalLaporan = allLaporan.length;
+  const totalMenunggu = allLaporan.filter(l => l.status === 'Menunggu').length;
+  const totalDiproses = allLaporan.filter(l => l.status === 'Diproses').length;
+  const totalSelesai = allLaporan.filter(l => l.status === 'Selesai').length;
+
+  const updateStatus = (id, nextStatus) => {
+    const updated = allLaporan.map(item => {
+      if (item.id === id) return { ...item, status: nextStatus };
+      return item;
+    });
+    setAllLaporan(updated);
+  };
+
+  const filteredData = filterStatus === 'Semua' 
+    ? allLaporan 
+    : allLaporan.filter(laporan => laporan.status === filterStatus);
 
   return (
     <>
       <div className="page-head">
         <div className="page-head-left">
-          <h1>Selamat pagi, Admin 👋</h1>
-          <p>Rabu, 22 April 2026 · Data diperbarui 5 menit lalu</p>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn btn-outline">Export Laporan</button>
-          <button className="btn btn-primary">+ Tambah Jadwal</button>
+          <h1>Monitoring RupiahCare</h1>
+          <p>Manajemen Operasional Penukaran NTT</p>
         </div>
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card green">
+        <div className="stat-card">
           <div className="stat-label">Total Laporan</div>
-          <div className="stat-val">1,847</div>
-          <div className="stat-change up">↑ 12% dari bulan lalu</div>
+          <div className="stat-val">{totalLaporan}</div>
         </div>
         <div className="stat-card amber">
-          <div className="stat-label">Menunggu Verifikasi</div>
-          <div className="stat-val">423</div>
-          <div className="stat-change warn">↑ 38 baru hari ini</div>
+          <div className="stat-label">Menunggu</div>
+          <div className="stat-val">{totalMenunggu}</div>
         </div>
         <div className="stat-card blue">
-          <div className="stat-label">Titik Penukaran</div>
-          <div className="stat-val">512</div>
-          <div className="stat-change up">Seluruh Indonesia</div>
+          <div className="stat-label">Diproses</div>
+          <div className="stat-val">{totalDiproses}</div>
         </div>
         <div className="stat-card green">
-          <div className="stat-label">Berhasil Ditukar</div>
-          <div className="stat-val">984</div>
-          <div className="stat-change up">↑ 8% bulan ini</div>
+          <div className="stat-label">Selesai</div>
+          <div className="stat-val">{totalSelesai}</div>
         </div>
       </div>
 
-      <div className="two-col">
-        <div className="card">
-          <div className="card-head">
-            <div className="card-title">Laporan Masuk Terbaru</div>
-          </div>
-          
-          {/* B. TABLE WRAPPER DAN PERULANGAN DATA (.MAP) DITARUH DI SINI */}
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr><th>Pelapor</th><th>Nominal</th><th>Kota</th><th>Status</th></tr>
-              </thead>
-              <tbody>
-                {/* Kode di bawah ini akan otomatis mencetak <tr> sebanyak isi dummyLaporan di atas */}
-                {dummyLaporan.map((laporan) => (
-                  <tr key={laporan.id}>
-                    <td><div className="td-main">{laporan.nama}</div></td>
-                    <td>{laporan.nominal}</td>
-                    <td>{laporan.kota}</td>
-                    <td>
-                      <span className={`badge badge-${laporan.status.toLowerCase()}`}>
-                        {laporan.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">Antrean Penukaran</div>
+          <div className="chip-group">
+            {['Semua', 'Menunggu', 'Diproses', 'Selesai'].map(cat => (
+              <div key={cat} className={`chip ${filterStatus === cat ? 'active' : ''}`} onClick={() => setFilterStatus(cat)}>
+                {cat}
+              </div>
+            ))}
           </div>
         </div>
-
-        <div className="card" style={{ padding: '18px 20px' }}>
-          <div className="card-title" style={{ marginBottom: '14px' }}>Notifikasi Terbaru</div>
-          <div className="notif-item">
-            <div className="notif-text"><b>38 laporan baru</b> masuk dan belum diverifikasi</div>
-            <div className="notif-time">Baru saja</div>
-          </div>
+        
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Pelapor</th>
+                <th>Nominal</th>
+                <th>Jadwal Kedatangan</th> {/* KOLOM BARU */}
+                <th>Status</th>
+                <th style={{ textAlign: 'right' }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((laporan) => (
+                <tr key={laporan.id}>
+                  <td><div className="td-main">{laporan.nama}</div></td>
+                  <td>{laporan.nominal}</td>
+                  <td>
+                    <div style={{ fontSize: '13px', fontWeight: '600' }}>{laporan.tanggal}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text3)' }}>{laporan.sesi}</div>
+                  </td>
+                  <td>
+                    <span className={`badge badge-${laporan.status.toLowerCase()}`}>
+                      {laporan.status}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {laporan.status === 'Menunggu' && (
+                      <button className="btn btn-primary" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => updateStatus(laporan.id, 'Diproses')}>
+                        Terima
+                      </button>
+                    )}
+                    {laporan.status === 'Diproses' && (
+                      <button className="btn" style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--green)', color: 'white' }} onClick={() => updateStatus(laporan.id, 'Selesai')}>
+                        Selesaikan
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </>
