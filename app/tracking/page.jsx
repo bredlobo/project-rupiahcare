@@ -2,134 +2,161 @@
 import { useState } from 'react';
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
-import Link from 'next/link';
 
 export default function TrackingPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+
+  // 1. DATA DUMMY (Sesuai dengan yang ada di Dashboard)
+  const dummyDatabase = [
+    { tiket: "RC-001", nama: "Siti Rahayu", nominal: "Rp 150.000", status: "Menunggu", tanggal: "2026-04-26", sesi: "Sesi 1", lokasi: "Kupang" },
+    { tiket: "RC-002", nama: "Ahmad Fauzi", nominal: "Koin x50", status: "Diproses", tanggal: "2026-04-26", sesi: "Sesi 2", lokasi: "Soe" },
+    { tiket: "RC-003", nama: "Dewi Lestari", nominal: "Rp 100.000", status: "Selesai", tanggal: "2026-04-25", sesi: "Sesi 1", lokasi: "Atambua" },
+  ];
+
+  // 2. FUNGSI PENCARIAN (SIMULASI API)
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery) return;
+
+    setIsLoading(true);
+    setResult(null);
+    setError('');
+
+    // Simulasi delay jaringan selama 1.5 detik
+    setTimeout(() => {
+      const found = dummyDatabase.find(item => item.tiket.toUpperCase() === searchQuery.toUpperCase());
+      
+      if (found) {
+        setResult(found);
+      } else {
+        setError('⚠️ Nomor tiket tidak ditemukan. Pastikan format benar (Contoh: RC-001)');
+      }
+      setIsLoading(false);
+    }, 1500);
+  };
 
   return (
     <div className="shell">
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
-      
-      {/* Sidebar Warga */}
       <Sidebar isOpen={isSidebarOpen} closeSidebar={() => setIsSidebarOpen(false)} role="user" />
       
       <div className="main">
         <Topbar title="Lacak Laporan" toggleSidebar={() => setIsSidebarOpen(true)} />
         
         <div className="content-area">
-          
-          {/* HEADER HALAMAN */}
-          <div className="page-head" style={{ marginBottom: '32px' }}>
-            <div className="page-head-left">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div className="sb-circle" style={{ width: '36px', height: '36px', fontSize: '14px' }}>RC</div>
+          <div className="page-head" style={{ textAlign: 'center', display: 'block', marginBottom: '40px' }}>
+            <h1 style={{ fontSize: '28px', marginBottom: '10px' }}>Lacak Status Penukaran</h1>
+            <p style={{ color: 'var(--text3)' }}>Masukkan nomor tiket Anda untuk melihat progres verifikasi petugas BI</p>
+          </div>
+
+          {/* FORM PENCARIAN */}
+          <div className="card" style={{ maxWidth: '600px', margin: '0 auto 40px', padding: '30px' }}>
+            <form onSubmit={handleSearch}>
+              <div className="form-group">
+                <label className="form-label">Nomor Tiket (ID Laporan)</label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Contoh: RC-001" 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '1px' }}
+                  />
+                  <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ padding: '0 24px' }}>
+                    {isLoading ? 'Mencari...' : 'Cari'}
+                  </button>
+                </div>
+              </div>
+            </form>
+            {error && <p style={{ color: 'var(--red)', fontSize: '13px', marginTop: '12px', textAlign: 'center' }}>{error}</p>}
+          </div>
+
+          {/* HASIL TRACKING */}
+          {isLoading && (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
+              <p style={{ color: 'var(--text3)' }}>Menghubungkan ke Server Bank Indonesia...</p>
+            </div>
+          )}
+
+          {result && (
+            <div className="card" style={{ maxWidth: '800px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
+              <div className="card-head" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
                 <div>
-                  <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)', lineHeight: '1' }}>RupiahCare</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.5px', marginTop: '4px' }}>PANTAU STATUS LAPORAN</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text3)', textTransform: 'uppercase' }}>Status Saat Ini</div>
+                  <h2 style={{ color: result.status === 'Selesai' ? 'var(--green)' : 'var(--amber)' }}>{result.status}</h2>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text3)' }}>ID Tiket</div>
+                  <div style={{ fontWeight: '700' }}>{result.tiket}</div>
                 </div>
               </div>
-              <h1>Lacak Laporan Saya</h1>
-              <p>Pantau status pengajuan penukaran uang Anda secara real-time</p>
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '800px' }}>
-            
-            {/* =========================================
-                ITEM 1: DIPROSES
-                ========================================= */}
-            <div className="card" style={{ padding: '20px', display: 'flex', gap: '16px' }}>
-              {/* Kotak Ikon Kiri */}
-              <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'var(--bg3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '20px', color: 'var(--text2)' }}>
-                💳
-              </div>
-              {/* Konten Kanan */}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                  <div style={{ fontWeight: '700', color: 'var(--text)', fontSize: '15px' }}>#LPR-2024-001 — Rp 50.000 × 3</div>
-                  <span className="badge badge-diproses">Diproses</span>
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Sobek · Bandung · 22 Apr 2026</div>
-
-                <div className="progress-bar" style={{ marginTop: '16px' }}>
-                  <div className="progress-fill" style={{ width: '66%', background: 'var(--green)' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '11px', fontWeight: '600' }}>
-                  <span style={{ color: 'var(--green)' }}>Diterima ✓</span>
-                  <span style={{ color: 'var(--blue)' }}>Diverifikasi ✓</span>
-                  <span style={{ color: 'var(--blue)' }}>Dijadwalkan ✓</span>
-                  <span style={{ color: 'var(--text3)' }}>Selesai</span>
+              <div style={{ padding: '30px 0' }}>
+                {/* TIMELINE VISUAL */}
+                <div className="tracking-timeline">
+                  <div className={`t-step ${result.status === 'Menunggu' || result.status === 'Diproses' || result.status === 'Selesai' ? 'active' : ''}`}>
+                    <div className="t-dot"></div>
+                    <div className="t-label">Laporan Diterima</div>
+                  </div>
+                  <div className={`t-line ${result.status === 'Diproses' || result.status === 'Selesai' ? 'active' : ''}`}></div>
+                  <div className={`t-step ${result.status === 'Diproses' || result.status === 'Selesai' ? 'active' : ''}`}>
+                    <div className="t-dot"></div>
+                    <div className="t-label">Dalam Verifikasi</div>
+                  </div>
+                  <div className={`t-line ${result.status === 'Selesai' ? 'active' : ''}`}></div>
+                  <div className={`t-step ${result.status === 'Selesai' ? 'active' : ''}`}>
+                    <div className="t-dot"></div>
+                    <div className="t-label">Siap Ditukar</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* =========================================
-                ITEM 2: MENUNGGU
-                ========================================= */}
-            <div className="card" style={{ padding: '20px', display: 'flex', gap: '16px' }}>
-              <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'var(--bg3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '20px', color: 'var(--text2)' }}>
-                🕒
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                  <div style={{ fontWeight: '700', color: 'var(--text)', fontSize: '15px' }}>#LPR-2024-002 — Koin Rp 1.000 × 50</div>
-                  <span className="badge badge-menunggu">Menunggu</span>
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Koin · Surabaya · 22 Apr 2026</div>
-
-                <div className="progress-bar" style={{ marginTop: '16px' }}>
-                  <div className="progress-fill" style={{ width: '25%', background: 'var(--amber)' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '11px', fontWeight: '600' }}>
-                  <span style={{ color: 'var(--green)' }}>Diterima ✓</span>
-                  <span style={{ color: 'var(--text3)' }}>Diverifikasi</span>
-                  <span style={{ color: 'var(--text3)' }}>Dijadwalkan</span>
-                  <span style={{ color: 'var(--text3)' }}>Selesai</span>
+              <div className="detail-list" style={{ background: 'var(--bg3)', borderRadius: '12px', padding: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Nama Pelapor</label>
+                    <p style={{ fontWeight: '600' }}>{result.nama}</p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Nominal Uang</label>
+                    <p style={{ fontWeight: '600', color: 'var(--green)' }}>{result.nominal}</p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Jadwal Penukaran</label>
+                    <p style={{ fontWeight: '600' }}>{result.tanggal} ({result.sesi})</p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Lokasi Kantor</label>
+                    <p style={{ fontWeight: '600' }}>KPwBI NTT - {result.lokasi}</p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* =========================================
-                ITEM 3: SELESAI (Highlight Hijau)
-                ========================================= */}
-            <div className="card" style={{ padding: '20px', display: 'flex', gap: '16px', border: '1px solid var(--green)', background: 'rgba(34, 200, 122, 0.03)' }}>
-              <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'var(--green-bg)', border: '1px solid rgba(34, 200, 122, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '20px', color: 'var(--green)' }}>
-                ✓
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                  <div style={{ fontWeight: '700', color: 'var(--text)', fontSize: '15px' }}>#LPR-2024-003 — Rp 100.000 × 2</div>
-                  <span className="badge badge-selesai">Selesai</span>
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text3)' }}>Lusuh · Jakarta · 18 Apr 2026 · Ditukar di Kantor BI Jakarta</div>
-
-                <div className="progress-bar" style={{ marginTop: '16px' }}>
-                  <div className="progress-fill" style={{ width: '100%', background: 'var(--green)' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '11px', fontWeight: '600' }}>
-                  <span style={{ color: 'var(--green)' }}>Diterima ✓</span>
-                  <span style={{ color: 'var(--green)' }}>Diverifikasi ✓</span>
-                  <span style={{ color: 'var(--green)' }}>Dijadwalkan ✓</span>
-                  <span style={{ color: 'var(--green)' }}>Selesai ✓</span>
-                </div>
-              </div>
-            </div>
-
-            {/* =========================================
-                TOMBOL BUAT LAPORAN BARU
-                ========================================= */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-              <Link href="/upload">
-                <button className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '14px' }}>
-                  + Buat Laporan Baru
-                </button>
-              </Link>
-            </div>
-
-          </div>
+          )}
         </div>
       </div>
+
+      <style jsx>{`
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--green); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tracking-timeline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; position: relative; }
+        .t-step { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1; }
+        .t-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--border); transition: 0.3s; }
+        .t-label { font-size: 11px; color: var(--text3); font-weight: 600; text-align: center; }
+        .t-line { flex: 1; height: 2px; background: var(--border); margin: 0 -20px; margin-bottom: 20px; transition: 0.3s; }
+        
+        .t-step.active .t-dot { background: var(--green); box-shadow: 0 0 10px var(--green); }
+        .t-step.active .t-label { color: var(--text); }
+        .t-line.active { background: var(--green); }
+      `}</style>
     </div>
   );
 }
