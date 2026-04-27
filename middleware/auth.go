@@ -8,12 +8,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Gunakan kunci yang SAMA dengan yang ada di controller
 var jwtKey = []byte("Rahasia_Pejuang_Rupiah_NTT_2026")
 
+// SATPAM 1: Cek apakah user sudah login
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 1. Ambil header Authorization
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Akses ditolak, token tidak ada"})
@@ -21,10 +20,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 2. Ambil token saja
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 
-		// 3. Validasi token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
@@ -35,13 +32,26 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 4. EXTRA: Ambil data UserID dari dalam token dan simpan ke Context
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			c.Set("user_id", claims["user_id"]) // Disimpan agar bisa dibaca controller
+			c.Set("user_id", claims["user_id"])
+			c.Set("role", claims["role"]) // Mengambil role dari isi token
 			c.Next()
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Gagal memproses klaim token"})
 			c.Abort()
 		}
+	}
+}
+
+// SATPAM 2: Khusus mengecek apakah role-nya adalah 'admin'
+func AdminOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Akses terlarang! Hanya Admin yang boleh masuk."})
+			c.Abort()
+			return
+		}
+		c.Next()
 	}
 }

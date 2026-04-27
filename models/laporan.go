@@ -20,6 +20,7 @@ type Laporan struct {
 	Status         string    `gorm:"type:enum('Menunggu', 'Diproses', 'Selesai', 'Ditolak');default:'Menunggu'" json:"status"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	Foto string `gorm:"type:varchar(255)" json:"foto"`
 
 	// Relasi: Laporan dimiliki oleh satu User
 	User User `gorm:"foreignKey:UserID" json:"user"`

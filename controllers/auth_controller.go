@@ -51,10 +51,10 @@ func Register(c *gin.Context) {
 	})
 }
 
-// --- FUNGSI LOGIN ---
+// --- FUNGSI LOGIN (SUDAH DIPERBAIKI) ---
 func Login(c *gin.Context) {
 	var input struct {
-		Email string `json:"email" binding:"required,email"`
+		Email string `json:"email" binding:"required"` // Tanpa ',email' agar NIK bisa masuk
 		Sandi string `json:"sandi" binding:"required"`
 	}
 
@@ -64,18 +64,22 @@ func Login(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email atau password salah"})
+	// Cari berdasarkan Email ATAU NIK
+	if err := config.DB.Where("email = ? OR nik = ?", input.Email, input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Akun tidak ditemukan (Email/NIK salah)"})
 		return
 	}
 
+	// Cek Password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Sandi)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email atau password salah"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Kata sandi salah"})
 		return
 	}
 
+	// Token JWT
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
+		"role":    user.Role,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	}
 
@@ -90,5 +94,7 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login berhasil! Selamat bekerja, Manggala.",
 		"token":   tokenString,
+		"role":    user.Role,
+		"nama":    user.NamaLengkap,
 	})
 }

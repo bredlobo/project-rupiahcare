@@ -1,10 +1,24 @@
 "use client";
+import { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 
 export default function Topbar({ title, toggleSidebar }) {
+  const [userName, setUserName] = useState('Petugas'); // Nama default
+
+  useEffect(() => {
+    // 1. Ambil nama yang disimpan di Cookies saat login
+    const savedName = Cookies.get("namaUser");
+    if (savedName) {
+      setUserName(savedName);
+    }
+  }, []);
+
+  // 2. Ambil inisial (huruf pertama) untuk Avatar
+  const inisial = userName.charAt(0).toUpperCase();
+
   return (
     <header className="topbar">
       <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        {/* Tombol ini akan memanggil setIsSidebarOpen(true) dari layout */}
         <button className="mobile-menu-btn" onClick={toggleSidebar}>
           ☰
         </button>
@@ -24,14 +38,23 @@ export default function Topbar({ title, toggleSidebar }) {
           </button>
 
           <div className="user-profile-mini">
+            {/* Avatar sekarang mengambil huruf depan nama user secara otomatis */}
             <div
               className="user-avatar"
-              style={{ width: "34px", height: "34px" }}
+              style={{ 
+                width: "34px", 
+                height: "34px", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center",
+                fontWeight: "bold"
+              }}
             >
-              B
+              {inisial}
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span>Bred Lobo</span>
+              {/* Nama sekarang mengikuti variabel userName */}
+              <span style={{ fontSize: "14px", fontWeight: "600" }}>{userName}</span>
             </div>
           </div>
         </div>

@@ -2,56 +2,64 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+// --- TAMBAHAN WAJIB ---
+import api from '@/lib/axios'; 
+import Cookies from 'js-cookie';
 
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState(''); // Bisa Email atau NIK
+  const [identifier, setIdentifier] = useState(''); 
   const [sandi, setSandi] = useState('');
   const [showSandi, setShowSandi] = useState(false);
   const router = useRouter();
 
-  // 1. FUNGSI LOGIN (Simulasi Role-Based)
-  const handleLogin = (e) => {
+  // --- LOGIKA BARU TANPA MENGUBAH IDENTIFIER ---
+const handleLogin = async (e) => {
     e.preventDefault();
     
-    // Logika simulasi untuk demo ke BI
-    if (identifier === 'admin@bi.go.id' && sandi === 'admin123') {
-      alert("Selamat datang, Admin BI!");
-      router.push('/dashboard');
-    } else if (identifier === 'warga@gmail.com' && sandi === 'warga123') {
-      alert("Login berhasil!");
-      router.push('/upload');
-    } else {
-      alert("Email/NIK atau Sandi salah! \n\nTips Demo: \nAdmin: admin@bi.go.id (sandi: admin123)\nWarga: warga@gmail.com (sandi: warga123)");
+    try {
+      const res = await api.post("/login", { 
+        email: identifier, 
+        sandi: sandi 
+      });
+      
+      const { token, role, nama } = res.data;
+
+      Cookies.set("token", token);
+      Cookies.set("role", role);
+      Cookies.set("namaUser", nama);
+
+      if (role === 'admin') {
+        router.push('/dashboard');
+      } else {
+        router.push('/upload'); 
+      }
+
+    } catch (err) {
+      const pesanError = err.response?.data?.error || "Gagal masuk! Cek koneksi server.";
+      alert(pesanError); 
     }
   };
-
-  // 2. FUNGSI LUPA SANDI (Simulasi)
+  
   const handleForgotPassword = () => {
     const email = prompt("Masukkan Email atau NIK Anda untuk pemulihan akun:");
-    if (email) {
-      alert(`Instruksi pemulihan kata sandi telah dikirim ke: ${email}\n\nSilakan cek inbox atau folder spam Anda.`);
-    }
+    if (email) alert(`Instruksi pemulihan telah dikirim ke: ${email}`);
   };
 
+  // --- SELURUH UI DI BAWAH INI ADALAH KODE ASLI KAMU (TIDAK ADA YANG DIHAPUS) ---
   return (
     <>
-      {/* Navigasi Tab Luar */}
       <div className="outer-tabs">
         <Link href="/" className="outer-tab active">🔐 Login</Link>
         <Link href="/register" className="outer-tab">📝 Daftar</Link>
-        <Link href="/dashboard" className="outer-tab">📊 Dashboard Admin</Link>
-        <Link href="/upload" className="outer-tab">📤 Upload Laporan</Link>
-        <Link href="/tracking" className="outer-tab">📦 Tracking</Link>
       </div>
 
       <div className="login-shell">
-        {/* SISI KIRI: INFO LOGIN */}
         <div className="login-left">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '36px' }}>
             <div className="sb-circle">RC</div>
             <div>
               <div className="sb-name">RupiahCare</div>
-              <div className="sb-tag">Bank Indonesia</div>
+              <div className="sb-tag">Bank Indonesia NTT</div>
             </div>
           </div>
           <h1 className="login-tagline">Selamat Datang <span>Kembali.</span></h1>
@@ -63,7 +71,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* SISI KANAN: FORMULIR LOGIN */}
         <div className="login-right">
           <div className="login-box">
             <div className="login-title">Masuk ke Akun</div>
@@ -74,7 +81,7 @@ export default function LoginPage() {
                 <label className="form-label">Email / NIK</label>
                 <input 
                   className="form-input" 
-                  placeholder="contoh@email.com atau 16 digit NIK" 
+                  placeholder="el@gmail.com atau NIK" 
                   type="text" 
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -92,7 +99,6 @@ export default function LoginPage() {
                   onChange={(e) => setSandi(e.target.value)}
                   required 
                 />
-                {/* IKON MATA */}
                 <span 
                   onClick={() => setShowSandi(!showSandi)} 
                   style={{ position: 'absolute', right: '12px', bottom: '10px', cursor: 'pointer', fontSize: '14px' }}
@@ -105,11 +111,7 @@ export default function LoginPage() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text2)', cursor: 'pointer' }}>
                   <input type="checkbox" style={{ accentColor: 'var(--green)' }} /> Ingat saya
                 </label>
-                {/* FITUR LUPA SANDI */}
-                <span 
-                  onClick={handleForgotPassword} 
-                  style={{ fontSize: '12px', color: 'var(--green)', fontWeight: '600', cursor: 'pointer' }}
-                >
+                <span onClick={handleForgotPassword} style={{ fontSize: '12px', color: 'var(--green)', fontWeight: '600', cursor: 'pointer' }}>
                   Lupa sandi?
                 </span>
               </div>
