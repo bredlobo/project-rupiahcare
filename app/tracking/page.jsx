@@ -1,161 +1,404 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function TrackingPage() {
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [laporanSaya, setLaporanSaya] = useState([]);
+  const [selectedLaporan, setSelectedLaporan] = useState(null);
 
-  // 1. DATA DUMMY (Sesuai dengan yang ada di Dashboard)
-  const dummyDatabase = [
-    { tiket: "RC-001", nama: "Siti Rahayu", nominal: "Rp 150.000", status: "Menunggu", tanggal: "2026-04-26", sesi: "Sesi 1", lokasi: "Kupang" },
-    { tiket: "RC-002", nama: "Ahmad Fauzi", nominal: "Koin x50", status: "Diproses", tanggal: "2026-04-26", sesi: "Sesi 2", lokasi: "Soe" },
-    { tiket: "RC-003", nama: "Dewi Lestari", nominal: "Rp 100.000", status: "Selesai", tanggal: "2026-04-25", sesi: "Sesi 1", lokasi: "Atambua" },
-  ];
+  // 1. SATPAM & AMBIL DATA
+  useEffect(() => {
+    const token = Cookies.get("token");
+    if (!token) {
+      router.push("/");
+    } else {
+      fetchRiwayat();
+    }
+  }, []);
 
-  // 2. FUNGSI PENCARIAN (SIMULASI API)
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchQuery) return;
+  const fetchRiwayat = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/user/riwayat");
 
-    setIsLoading(true);
-    setResult(null);
-    setError('');
+      console.log("Data Riwayat dari Go:", res.data);
 
-    // Simulasi delay jaringan selama 1.5 detik
-    setTimeout(() => {
-      const found = dummyDatabase.find(item => item.tiket.toUpperCase() === searchQuery.toUpperCase());
-      
-      if (found) {
-        setResult(found);
-      } else {
-        setError('⚠️ Nomor tiket tidak ditemukan. Pastikan format benar (Contoh: RC-001)');
-      }
-      setIsLoading(false);
-    }, 1500);
+      // FIX: Ambil dari res.data.riwayat sesuai dengan nama key di Go kamu
+      const dataAsli = res.data.riwayat || [];
+
+      setLaporanSaya(dataAsli);
+    } catch (err) {
+      console.error("Gagal ambil riwayat:", err);
+      setLaporanSaya([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) return null;
 
   return (
     <div className="shell">
-      <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
-      <Sidebar isOpen={isSidebarOpen} closeSidebar={() => setIsSidebarOpen(false)} role="user" />
-      
+      <div
+        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        closeSidebar={() => setIsSidebarOpen(false)}
+        role="user"
+      />
+
       <div className="main">
-        <Topbar title="Lacak Laporan" toggleSidebar={() => setIsSidebarOpen(true)} />
-        
+        <Topbar
+          title="Pelacakan Laporan"
+          toggleSidebar={() => setIsSidebarOpen(true)}
+        />
+
         <div className="content-area">
-          <div className="page-head" style={{ textAlign: 'center', display: 'block', marginBottom: '40px' }}>
-            <h1 style={{ fontSize: '28px', marginBottom: '10px' }}>Lacak Status Penukaran</h1>
-            <p style={{ color: 'var(--text3)' }}>Masukkan nomor tiket Anda untuk melihat progres verifikasi petugas BI</p>
+          <div className="page-head" style={{ marginBottom: "32px" }}>
+            <div className="page-head-left">
+              <h1>Status Penukaran Anda</h1>
+              <p>
+                Pantau proses verifikasi laporan uang rusak Anda secara
+                real-time.
+              </p>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={() => router.push("/upload")}
+            >
+              + Buat Laporan Baru
+            </button>
           </div>
 
-          {/* FORM PENCARIAN */}
-          <div className="card" style={{ maxWidth: '600px', margin: '0 auto 40px', padding: '30px' }}>
-            <form onSubmit={handleSearch}>
-              <div className="form-group">
-                <label className="form-label">Nomor Tiket (ID Laporan)</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder="Contoh: RC-001" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '1px' }}
-                  />
-                  <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ padding: '0 24px' }}>
-                    {isLoading ? 'Mencari...' : 'Cari'}
-                  </button>
-                </div>
-              </div>
-            </form>
-            {error && <p style={{ color: 'var(--red)', fontSize: '13px', marginTop: '12px', textAlign: 'center' }}>{error}</p>}
+          <div className="card">
+            <div className="card-head">
+              <div className="card-title">Daftar Tiket Laporan</div>
+            </div>
+
+            <div className="table-wrapper">
+              <table style={{ borderCollapse: "separate", borderSpacing: "0" }}>
+                <thead>
+                  <tr>
+                    <th>Nomor Tiket</th>
+                    <th>Nominal</th>
+                    <th>Tanggal Jadwal</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: "right" }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {laporanSaya.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        style={{
+                          textAlign: "center",
+                          padding: "40px",
+                          color: "var(--text3)",
+                        }}
+                      >
+                        Belum ada laporan yang dikirim.
+                      </td>
+                    </tr>
+                  ) : (
+                    laporanSaya.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <div
+                            className="td-main"
+                            style={{ color: "var(--green)" }}
+                          >
+                            {item.ticket_number}
+                          </div>
+                          <div className="td-sub">{item.jenis_kerusakan}</div>
+                        </td>
+                        <td>
+                          <div className="td-main">
+                            Rp {Number(item.nominal).toLocaleString("id-ID")}
+                          </div>
+                          <div className="td-sub">{item.jumlah} Lembar</div>
+                        </td>
+                        <td>
+                          <div className="td-main">
+                            {item.tanggal_penukaran}
+                          </div>
+                          <div className="td-sub">{item.sesi}</div>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge badge-${(item.status || "menunggu").toLowerCase()}`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <button
+                            className="btn btn-outline"
+                            style={{ padding: "6px 12px", fontSize: "11px" }}
+                            onClick={() => setSelectedLaporan(item)}
+                          >
+                            👁️ Detail
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-
-          {/* HASIL TRACKING */}
-          {isLoading && (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
-              <p style={{ color: 'var(--text3)' }}>Menghubungkan ke Server Bank Indonesia...</p>
-            </div>
-          )}
-
-          {result && (
-            <div className="card" style={{ maxWidth: '800px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
-              <div className="card-head" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-                <div>
-                  <div style={{ fontSize: '12px', color: 'var(--text3)', textTransform: 'uppercase' }}>Status Saat Ini</div>
-                  <h2 style={{ color: result.status === 'Selesai' ? 'var(--green)' : 'var(--amber)' }}>{result.status}</h2>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text3)' }}>ID Tiket</div>
-                  <div style={{ fontWeight: '700' }}>{result.tiket}</div>
-                </div>
-              </div>
-
-              <div style={{ padding: '30px 0' }}>
-                {/* TIMELINE VISUAL */}
-                <div className="tracking-timeline">
-                  <div className={`t-step ${result.status === 'Menunggu' || result.status === 'Diproses' || result.status === 'Selesai' ? 'active' : ''}`}>
-                    <div className="t-dot"></div>
-                    <div className="t-label">Laporan Diterima</div>
-                  </div>
-                  <div className={`t-line ${result.status === 'Diproses' || result.status === 'Selesai' ? 'active' : ''}`}></div>
-                  <div className={`t-step ${result.status === 'Diproses' || result.status === 'Selesai' ? 'active' : ''}`}>
-                    <div className="t-dot"></div>
-                    <div className="t-label">Dalam Verifikasi</div>
-                  </div>
-                  <div className={`t-line ${result.status === 'Selesai' ? 'active' : ''}`}></div>
-                  <div className={`t-step ${result.status === 'Selesai' ? 'active' : ''}`}>
-                    <div className="t-dot"></div>
-                    <div className="t-label">Siap Ditukar</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-list" style={{ background: 'var(--bg3)', borderRadius: '12px', padding: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Nama Pelapor</label>
-                    <p style={{ fontWeight: '600' }}>{result.nama}</p>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Nominal Uang</label>
-                    <p style={{ fontWeight: '600', color: 'var(--green)' }}>{result.nominal}</p>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Jadwal Penukaran</label>
-                    <p style={{ fontWeight: '600' }}>{result.tanggal} ({result.sesi})</p>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11px', color: 'var(--text3)' }}>Lokasi Kantor</label>
-                    <p style={{ fontWeight: '600' }}>KPwBI NTT - {result.lokasi}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
+      {/* MODAL DETAIL TIKET - VERSI LENGKAP */}
+      {selectedLaporan && (
+        <div className="modal-overlay" onClick={() => setSelectedLaporan(null)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "500px" }}
+          >
+            <div className="modal-header">
+              {/* Menampilkan nomor tiket di header agar jelas */}
+              <h3>Tiket #{selectedLaporan.ticket_number}</h3>
+              <button
+                className="close-btn"
+                onClick={() => setSelectedLaporan(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* 1. Bagian Foto Bukti */}
+              <div
+                style={{
+                  marginBottom: "20px",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <label
+                  className="form-label"
+                  style={{
+                    padding: "8px 12px",
+                    display: "block",
+                    background: "var(--bg3)",
+                  }}
+                >
+                  📸 Foto Bukti Uang
+                </label>
+                <img
+                  src={`http://localhost:8080${selectedLaporan.foto}`}
+                  alt="Uang Rusak"
+                  style={{
+                    width: "100%",
+                    maxHeight: "200px",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </div>
+
+              {/* 2. Grid Informasi Utama */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "20px",
+                  padding: "10px",
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Nominal
+                  </label>
+                  <p
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "700",
+                      color: "var(--green)",
+                    }}
+                  >
+                    Rp {Number(selectedLaporan.nominal).toLocaleString("id-ID")}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Status
+                  </label>
+                  <p>
+                    <span
+                      className={`badge badge-${selectedLaporan.status?.toLowerCase()}`}
+                    >
+                      {selectedLaporan.status}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    📅 Tanggal Kedatangan
+                  </label>
+                  <p style={{ fontSize: "14px", fontWeight: "600" }}>
+                    {selectedLaporan.tanggal_penukaran || "-"}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text3)",
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    ⏰ Sesi Jam
+                  </label>
+                  <p style={{ fontSize: "14px", fontWeight: "600" }}>
+                    {selectedLaporan.sesi || "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. Catatan Tambahan (Jika ada) */}
+              <div
+                style={{
+                  marginTop: "15px",
+                  padding: "12px",
+                  background: "var(--bg3)",
+                  borderRadius: "8px",
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: "10px",
+                    color: "var(--text3)",
+                    fontWeight: "bold",
+                  }}
+                >
+                  INFO KERUSAKAN
+                </label>
+                <p style={{ fontSize: "13px" }}>
+                  {selectedLaporan.jenis_kerusakan} -{" "}
+                  {selectedLaporan.catatan || "Tidak ada catatan tambahan."}
+                </p>
+              </div>
+
+              <p
+                style={{
+                  fontSize: "11px",
+                  color: "var(--text3)",
+                  textAlign: "center",
+                  marginTop: "20px",
+                }}
+              >
+                * Silakan tunjukkan tiket ini kepada petugas BI NTT sesuai
+                jadwal di atas.
+              </p>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-primary"
+                onClick={() => window.print()}
+              >
+                Cetak Ulang Tiket
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={() => setSelectedLaporan(null)}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--green); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .tracking-timeline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; position: relative; }
-        .t-step { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1; }
-        .t-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--border); transition: 0.3s; }
-        .t-label { font-size: 11px; color: var(--text3); font-weight: 600; text-align: center; }
-        .t-line { flex: 1; height: 2px; background: var(--border); margin: 0 -20px; margin-bottom: 20px; transition: 0.3s; }
-        
-        .t-step.active .t-dot { background: var(--green); box-shadow: 0 0 10px var(--green); }
-        .t-step.active .t-label { color: var(--text); }
-        .t-line.active { background: var(--green); }
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+        .modal-content {
+          background: var(--card);
+          border-radius: 16px;
+          padding: 0;
+          width: 90%;
+          animation: zoomIn 0.2s ease;
+          border: 1px solid var(--border2);
+        }
+        .modal-header {
+          padding: 20px;
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .modal-body {
+          padding: 20px;
+        }
+        .modal-footer {
+          padding: 16px 20px;
+          border-top: 1px solid var(--border);
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+        }
+        small {
+          font-size: 10px;
+          color: var(--text3);
+          font-weight: bold;
+        }
+        @keyframes zoomIn {
+          from {
+            transform: scale(0.95);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
       `}</style>
     </div>
   );

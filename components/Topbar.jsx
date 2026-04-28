@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
+import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 
 export default function Topbar({ title, toggleSidebar }) {
-  const [userName, setUserName] = useState('Petugas'); // Nama default
+  const [userName, setUserName] = useState("Petugas"); // Nama default
 
   useEffect(() => {
     // 1. Ambil nama yang disimpan di Cookies saat login
@@ -41,20 +41,22 @@ export default function Topbar({ title, toggleSidebar }) {
             {/* Avatar sekarang mengambil huruf depan nama user secara otomatis */}
             <div
               className="user-avatar"
-              style={{ 
-                width: "34px", 
-                height: "34px", 
-                display: "flex", 
-                alignItems: "center", 
+              style={{
+                width: "34px",
+                height: "34px",
+                display: "flex",
+                alignItems: "center",
                 justifyContent: "center",
-                fontWeight: "bold"
+                fontWeight: "bold",
               }}
             >
               {inisial}
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {/* Nama sekarang mengikuti variabel userName */}
-              <span style={{ fontSize: "14px", fontWeight: "600" }}>{userName}</span>
+              <span style={{ fontSize: "14px", fontWeight: "600" }}>
+                {userName}
+              </span>
             </div>
           </div>
         </div>

@@ -1183,3 +1183,71 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
   .content-area { padding: 16px; }
   .search-bar { display: none; }
 }
+
+/* =========================================
+   FIX CETAK TIKET PROFESIONAL
+   ========================================= */
+@page {
+  size: auto;
+  margin: 0mm; /* Menghilangkan Header/Footer (URL & Tanggal) bawaan browser */
+}
+
+@media print {
+  /* 1. Sembunyikan SEMUA elemen kecuali area tiket */
+  header, footer, nav, aside, .sidebar, .topbar, .outer-tabs, 
+  .mobile-menu-btn, .sidebar-overlay, .btn, .step-line, .progress-steps {
+    display: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* 2. Reset Layout agar fokus ke tengah */
+  body, .shell, .main, .content-area {
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
+    display: block !important; /* Matikan flex agar tidak berantakan */
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* 3. Desain Khusus Kartu Tiket BI */
+  .card {
+    border: 2px solid #111 !important;
+    box-shadow: none !important;
+    margin: 40px auto !important;
+    padding: 40px !important;
+    width: 90% !important;
+    max-width: 450px !important;
+    display: block !important;
+    border-radius: 16px !important;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact; /* Memaksa warna tetap muncul */
+    print-color-adjust: exact;
+  }
+
+  /* 4. Perjelas tulisan Tiket */
+  .card h1 {
+    color: black !important;
+    margin-bottom: 20px !important;
+  }
+
+  .card div[style*="dashed"] {
+    border: 2px dashed #333 !important;
+    background: #f9f9f9 !important;
+  }
+
+  #ticket-number { /* Pastikan ID ini ada di elemen RC-SUCCESS kamu */
+    color: #16a362 !important;
+    font-size: 32px !important;
+  }
+
+  /* Sembunyikan tombol "Salin Nomor Tiket" saat diprint */
+  button, .btn-primary, .btn-outline {
+    display: none !important;
+  }
+}

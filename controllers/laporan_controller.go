@@ -23,16 +23,19 @@ func BuatLaporan(c *gin.Context) {
 	nominalStr := c.PostForm("nominal")
 	jumlahStr := c.PostForm("jumlah")
 	catatan := c.PostForm("catatan")
+	tanggalPenukaran := c.PostForm("tanggal_penukaran") 
+	sesi := c.PostForm("sesi")
 
 	// Validasi dasar
-	if jenisKerusakan == "" || nominalStr == "" || jumlahStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Jenis kerusakan, nominal, dan jumlah wajib diisi"})
+	if jenisKerusakan == "" || nominalStr == "" || jumlahStr == "" || tanggalPenukaran == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Semua data wajib diisi, termasuk tanggal penukaran"})
 		return
 	}
 
 	// Konversi tipe data
 	nominal, _ := strconv.ParseInt(nominalStr, 10, 64)
 	jumlah, _ := strconv.Atoi(jumlahStr)
+	lokasi := c.PostForm("lokasi")
 
 	// 2. Proses Upload File Foto
 	file, err := c.FormFile("foto")
@@ -66,8 +69,11 @@ func BuatLaporan(c *gin.Context) {
 		JenisKerusakan: jenisKerusakan,
 		Nominal:        nominal,
 		Jumlah:         jumlah,
+		TanggalPenukaran: tanggalPenukaran,
+		Sesi:             sesi,
+		Lokasi:           lokasi,
 		Catatan:        catatan,
-		Foto:           namaFile, // Simpan nama file fotonya
+		Foto:           "/uploads/" + namaFile,
 		Status:         "Menunggu",
 	}
 
@@ -77,27 +83,32 @@ func BuatLaporan(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Laporan & Foto berhasil terkirim ke RupiahCare!",
-		"data":    laporan,
+		"message":        "Laporan & Foto berhasil terkirim ke RupiahCare!",
+		"ticket_number": kodeLaporan,
+		"data":           laporan,
 	})
 }
 
 // --- FUNGSI RIWAYAT LAPORAN ---
 func GetMyLaporan(c *gin.Context) {
-	userIDVal, _ := c.Get("user_id")
-	userID := userIDVal.(string)
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Sesi tidak valid"})
+        return
+    }
 
-	var laporans []models.Laporan
-	if err := config.DB.Where("user_id = ?", userID).Find(&laporans).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil riwayat laporan"})
-		return
-	}
+    var laporans []models.Laporan
+    // GORM sangat pintar, masukkan saja userID tanpa perlu ditebak tipenya (string/uint)
+    if err := config.DB.Where("user_id = ?", userID).Find(&laporans).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil riwayat"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"total":   len(laporans),
-		"riwayat": laporans,
-	})
+    c.JSON(http.StatusOK, gin.H{
+        "status":  "success",
+        "total":   len(laporans),
+        "riwayat": laporans,
+    })
 }
 
 // --- FUNGSI ADMIN: LIHAT SEMUA LAPORAN ---
