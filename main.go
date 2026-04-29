@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math/rand"
+	"time"
 	"project-rupiahcare/config"
 	"project-rupiahcare/controllers"
 	"project-rupiahcare/middleware"
@@ -11,6 +13,9 @@ import (
 )
 
 func main() {
+
+	rand.Seed(time.Now().UnixNano())
+
 	// 1. Koneksi DB & Migrasi
 	config.ConnectDatabase()
 	config.DB.AutoMigrate(&models.User{}, &models.Laporan{})
@@ -40,7 +45,7 @@ func main() {
 		userRoutes.Use(middleware.AuthMiddleware())
 		{
 			userRoutes.GET("/cek-status", func(c *gin.Context) {
-				c.JSON(200, gin.H{"message": "Halo Manggala! Kamu berhasil masuk."})
+			c.JSON(200, gin.H{"message": "Halo Manggala! Kamu berhasil masuk."})
 			})
 			userRoutes.POST("/lapor", controllers.BuatLaporan)
 			userRoutes.GET("/riwayat", controllers.GetMyLaporan)

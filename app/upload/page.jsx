@@ -47,8 +47,10 @@ export default function UploadPage() {
 
   useEffect(() => {
     const token = Cookies.get("token");
-    if (!token) {
-      router.push("/");
+    const role = Cookies.get("role");
+    if (!token || role != "user") {
+      alert("Hanya warga (User) yang bisa membuat laporan!");
+      router.push(role === "admin" ? "/dashboard" : "/");
     } else {
       setLoading(false);
     }

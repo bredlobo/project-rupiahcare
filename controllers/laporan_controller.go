@@ -15,6 +15,16 @@ import (
 
 // --- FUNGSI BUAT LAPORAN (Dengan Upload Foto) ---
 func BuatLaporan(c *gin.Context) {
+
+    role, _ := c.Get("role")
+
+    if role != "user" {
+        c.JSON(http.StatusForbidden, gin.H{
+            "error": "Petugas BI (Admin) tidak diperbolehkan membuat laporan penukaran!",
+        })
+        return
+    }
+
 	userIDVal, _ := c.Get("user_id")
 	userID := userIDVal.(string)
 
@@ -61,7 +71,7 @@ func BuatLaporan(c *gin.Context) {
 
 	// 3. Simpan Data ke Database
 	t := time.Now()
-	kodeLaporan := fmt.Sprintf("RC-%s-%d", t.Format("20060102"), rand.Intn(9000)+1000)
+	kodeLaporan := fmt.Sprintf("RC-%s-%d", t.Format("20060102-150405"), rand.Intn(900)+100)
 
 	laporan := models.Laporan{
 		UserID:         userID,

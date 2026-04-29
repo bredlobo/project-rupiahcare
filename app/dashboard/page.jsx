@@ -25,13 +25,26 @@ export default function DashboardOverview() {
     if (!token || role !== "admin") {
       router.push("/");
     } else {
+      // 1. Ambil data pertama kali
       fetchLaporan();
+
+      // 2. TAMBAHAN: Polling otomatis setiap 10 detik
+      const interval = setInterval(() => {
+        console.log("Auto-updating data...");
+        fetchLaporan(false); // Kirim false agar tidak memicu loading screen (flicker)
+      }, 5000);
+
+      // 3. TAMBAHAN: Cleanup interval saat pindah halaman
+      return () => clearInterval(interval);
     }
   }, [router]);
 
-  const fetchLaporan = async () => {
+  // MODIFIKASI: Tambahkan parameter isInitial
+  const fetchLaporan = async (isInitial = true) => {
     try {
-      setLoading(true);
+      // Hanya tampilkan loading screen jika ini pemanggilan pertama kali
+      if (isInitial && allLaporan.length === 0) setLoading(true);
+      
       const res = await api.get("/admin/laporan");
       const rawData = res.data;
       const dataFinal = Array.isArray(rawData) ? rawData : rawData.data || [];
@@ -40,7 +53,7 @@ export default function DashboardOverview() {
       console.error("Gagal ambil data:", err);
       setAllLaporan([]);
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 
@@ -59,6 +72,10 @@ export default function DashboardOverview() {
   };
 
   const dataAman = Array.isArray(allLaporan) ? allLaporan : [];
+
+  const totalMenunggu = dataAman.filter((l) => l.status === "Menunggu").length;
+  const totalDiproses = dataAman.filter((l) => l.status === "Diproses").length;
+  const totalSelesai = dataAman.filter((l) => l.status === "Selesai").length;
 
   // --- LOGIKA FILTER BERLAPIS (STATUS + LOKASI + SESI) ---
   const filteredData = dataAman.filter((laporan) => {
@@ -82,8 +99,8 @@ export default function DashboardOverview() {
     <>
       <div className="page-head">
         <div className="page-head-left">
-          <h1>Monitoring RupiahCare</h1>
-          <p>Panel Kontrol Utama Petugas Bank Indonesia NTT</p>
+          <h1>Monitoring RupiahCare 📡</h1>
+          <p>Panel Kontrol Utama Petugas Bank Indonesia NTT (Auto-update)</p>
         </div>
       </div>
 
@@ -91,8 +108,8 @@ export default function DashboardOverview() {
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-label">Total Filtered</div><div className="stat-val">{sortedData.length}</div></div>
         <div className="stat-card amber"><div className="stat-label">Menunggu</div><div className="stat-val">{dataAman.filter(l => l.status === "Menunggu").length}</div></div>
-        <div className="stat-card blue"><div className="stat-label">Diproses</div><div className="stat-val">{dataAman.filter(l => l.status === "Diproses").length}</div></div>
-        <div className="stat-card green"><div className="stat-label">Selesai</div><div className="stat-val">{dataAman.filter(l => l.status === "Selesai").length}</div></div>
+        <div className="stat-card blue"><div className="stat-label">Diproses</div><div className="stat-val">{totalDiproses || dataAman.filter(l => l.status === "Diproses").length}</div></div>
+        <div className="stat-card green"><div className="stat-label">Selesai</div><div className="stat-val">{totalSelesai || dataAman.filter(l => l.status === "Selesai").length}</div></div>
       </div>
 
       <div className="card">
@@ -158,7 +175,7 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Modal Detail (Pastikan menampilkan lokasi) */}
+      {/* Modal Detail */}
       {selectedLaporan && (
         <div className="modal-overlay" onClick={() => setSelectedLaporan(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -181,7 +198,13 @@ export default function DashboardOverview() {
               </div>
             </div>
             <div className="modal-footer">
-              {/* Tombol aksi tetap sama */}
+              {/* TAMBAHAN: Tombol Update Status agar Admin bisa bekerja langsung */}
+              {selectedLaporan.status === "Menunggu" && (
+                <button className="btn btn-primary" onClick={() => updateStatus(selectedLaporan.id, "Diproses")}>Terima & Proses</button>
+              )}
+              {selectedLaporan.status === "Diproses" && (
+                <button className="btn" style={{ background: "var(--green)", color: "white" }} onClick={() => updateStatus(selectedLaporan.id, "Selesai")}>Selesaikan</button>
+              )}
               <button className="btn btn-outline" onClick={() => setSelectedLaporan(null)}>Tutup</button>
             </div>
           </div>
@@ -189,6 +212,7 @@ export default function DashboardOverview() {
       )}
 
       <style jsx>{`
+        /* Style asli kamu tetap terjaga */
         .modal-overlay {
           position: fixed;
           top: 0;
@@ -251,14 +275,8 @@ export default function DashboardOverview() {
           justify-content: flex-end;
         }
         @keyframes slideUp {
-          from {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
     </>
