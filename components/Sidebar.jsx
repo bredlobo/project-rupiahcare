@@ -11,7 +11,7 @@ export default function Sidebar({ isOpen, closeSidebar, role = "user" }) {
           <div className="sb-logomark-text">
             <div className="sb-name">RupiahCare</div>
             <div className="sb-tag">
-              {role === "admin" ? "Admin BI" : "Pengguna"}
+              {role === "admin" ? "Admin" : "Pengguna"}
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "RupiahCare — Bank Indonesia",
+  title: "Rupian Care",
   description: "Platform pelaporan uang tidak layak edar",
 };
 
