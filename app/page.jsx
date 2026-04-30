@@ -187,46 +187,6 @@ export default function LoginPage() {
                 Masuk Sekarang
               </button>
             </form>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                margin: "20px 0",
-                gap: "10px",
-              }}
-            >
-              <div
-                style={{ flex: 1, height: "1px", background: "var(--border)" }}
-              ></div>
-              <span style={{ fontSize: "12px", color: "var(--text3)" }}>
-                Atau masuk dengan
-              </span>
-              <div
-                style={{ flex: 1, height: "1px", background: "var(--border)" }}
-              ></div>
-            </div>
-
-            <button
-              type="button"
-              className="btn-outline"
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "10px",
-                padding: "12px",
-              }}
-            >
-              <img
-                src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png"
-                width="18"
-                alt="Google"
-              />
-              Google Account
-            </button>
-
             <div className="switch-text">
               Belum punya akun? <Link href="/register">Daftar di sini</Link>
             </div>
