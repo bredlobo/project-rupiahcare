@@ -103,7 +103,6 @@ export default function RegisterPage() {
             <div className="sb-circle">RC</div>
             <div>
               <div className="sb-name">RupiahCare</div>
-              <div className="sb-tag">Bank Indonesia</div>
             </div>
           </div>
           <div className="login-tagline">
@@ -111,7 +110,7 @@ export default function RegisterPage() {
           </div>
           <p className="login-desc">
             Daftarkan diri Anda untuk mempermudah proses penukaran uang tidak
-            layak edar melalui layanan resmi BI.
+            layak.
           </p>
         </div>
 
